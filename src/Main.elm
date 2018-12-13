@@ -2,10 +2,10 @@ module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import Browser.Navigation as Navigation
-import Html exposing (Html, div, h1, img, text)
-import Html.Attributes exposing (src)
+import Html exposing (..)
+import Html.Attributes exposing (..)
 import Url
-import Url.Parser as Parser
+import Url.Parser as Parser exposing ((</>))
 
 
 
@@ -53,7 +53,8 @@ update msg model =
 
 type Route
     = Home
-    | Hoge
+    | About
+    | Counter
     | NotFound
 
 
@@ -61,7 +62,8 @@ parser : Parser.Parser (Route -> a) a
 parser =
     Parser.oneOf
         [ Parser.map Home Parser.top
-        , Parser.map Hoge <| Parser.s "hoge"
+        , Parser.map About <| Parser.s "about"
+        , Parser.map Counter <| Parser.s "counter"
         ]
 
 
@@ -79,18 +81,46 @@ view model =
     case parse model.url of
         Home ->
             { title = "home"
-            , body = [ text "home" ]
+            , body =
+                [ text "home"
+                , viewLinks
+                ]
             }
 
-        Hoge ->
-            { title = "hoge"
-            , body = [ text "hoge" ]
+        About ->
+            { title = "about"
+            , body =
+                [ text "I am uutarou"
+                , viewLinks
+                ]
+            }
+
+        Counter ->
+            { title = "counter"
+            , body =
+                [ text "counter"
+                , viewLinks
+                ]
             }
 
         NotFound ->
             { title = "not found"
-            , body = [ text "not found" ]
+            , body =
+                [ text "not found"
+                , viewLinks
+                ]
             }
+
+
+viewLinks : Html Msg
+viewLinks =
+    div []
+        [ ul []
+            [ li [] [ a [ href "/" ] [ text "/" ] ]
+            , li [] [ a [ href "/about" ] [ text "/about" ] ]
+            , li [] [ a [ href "/counter" ] [ text "/counter" ] ]
+            ]
+        ]
 
 
 
