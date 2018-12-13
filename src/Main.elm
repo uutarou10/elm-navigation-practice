@@ -4,6 +4,7 @@ import Browser
 import Browser.Navigation as Navigation
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Page.About
 import Url
 import Url.Parser as Parser exposing ((</>))
 
@@ -15,12 +16,13 @@ import Url.Parser as Parser exposing ((</>))
 type alias Model =
     { url : Url.Url
     , key : Navigation.Key
+    , about : Page.About.Model
     }
 
 
 init : () -> Url.Url -> Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
-    ( Model url key, Cmd.none )
+    ( Model url key Page.About.init, Cmd.none )
 
 
 
@@ -88,12 +90,7 @@ view model =
             }
 
         About ->
-            { title = "about"
-            , body =
-                [ text "I am uutarou"
-                , viewLinks
-                ]
-            }
+            Page.About.view model.about
 
         Counter ->
             { title = "counter"
