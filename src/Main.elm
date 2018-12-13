@@ -1,135 +1,114 @@
-module Main exposing (Model, Msg(..), init, main, update, view)
+module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Navigation
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Page.About
+import Html.Events exposing (..)
+import Page.Form
 import Url
-import Url.Parser as Parser exposing ((</>))
 
 
 
----- MODEL ----
-
-
-type alias Model =
-    { url : Url.Url
-    , key : Navigation.Key
-    , about : Page.About.Model
-    }
-
-
-init : () -> Url.Url -> Navigation.Key -> ( Model, Cmd Msg )
-init flags url key =
-    ( Model url key Page.About.init, Cmd.none )
-
-
-
----- UPDATE ----
-
-
-type Msg
-    = LinkClicked Browser.UrlRequest
-    | UrlChange Url.Url
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        LinkClicked urlRequest ->
-            case urlRequest of
-                Browser.Internal url ->
-                    ( model, Navigation.pushUrl model.key <| Url.toString url )
-
-                Browser.External url ->
-                    ( model, Navigation.load url )
-
-        UrlChange url ->
-            ( { model | url = url }, Cmd.none )
-
-
-
----- NAVIGATION ----
-
-
-type Route
-    = Home
-    | About
-    | Counter
-    | NotFound
-
-
-parser : Parser.Parser (Route -> a) a
-parser =
-    Parser.oneOf
-        [ Parser.map Home Parser.top
-        , Parser.map About <| Parser.s "about"
-        , Parser.map Counter <| Parser.s "counter"
-        ]
-
-
-parse : Url.Url -> Route
-parse url =
-    Maybe.withDefault NotFound <| Parser.parse parser url
-
-
-
----- VIEW ----
-
-
-view : Model -> Browser.Document Msg
-view model =
-    case parse model.url of
-        Home ->
-            { title = "home"
-            , body =
-                [ text "home"
-                , viewLinks
-                ]
-            }
-
-        About ->
-            Page.About.view model.about
-
-        Counter ->
-            { title = "counter"
-            , body =
-                [ text "counter"
-                , viewLinks
-                ]
-            }
-
-        NotFound ->
-            { title = "not found"
-            , body =
-                [ text "not found"
-                , viewLinks
-                ]
-            }
-
-
-viewLinks : Html Msg
-viewLinks =
-    div []
-        [ ul []
-            [ li [] [ a [ href "/" ] [ text "/" ] ]
-            , li [] [ a [ href "/about" ] [ text "/about" ] ]
-            , li [] [ a [ href "/counter" ] [ text "/counter" ] ]
-            ]
-        ]
-
-
-
----- PROGRAM ----
+-- Main
 
 
 main =
     Browser.application
-        { view = view
-        , init = init
+        { init = init
+        , view = view
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         , onUrlRequest = LinkClicked
-        , onUrlChange = UrlChange
+        , onUrlChange = UrlChanged
         }
+
+
+init : () -> Url.Url -> Navigation.Key -> ( Model, Cmd Msg )
+init flags url key =
+    let
+        -- TODO: Parseする
+        page =
+            Top
+    in
+    ( { key = key
+      , page = page
+      }
+    , Cmd.none
+    )
+
+
+
+-- Model
+
+
+type alias Model =
+    { key : Navigation.Key
+    , page : Page
+    }
+
+
+type Page
+    = Top
+    | Form Page.Form.Model
+
+
+
+-- Update
+
+
+type Msg
+    = FormMsg Page.Form.Msg
+    | UrlChanged Browser.UrlRequest
+    | LinkClicked Url.Url
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update message model =
+    case message of
+        FormMsg msg ->
+            case model.page of
+                Form form ->
+                    stepForm model (Page.Form.update msg form)
+
+                _ ->
+                    ( model, Cmd.none )
+
+        UrlChanged url ->
+            case url of
+                Browser.Internal url ->
+                    ( model, Navigation.pushUrl model.key )
+
+
+stepForm : Model -> ( Page.Form.Model, Cmd Page.Form.Msg ) -> ( Model, Cmd Msg )
+stepForm model ( form, cmds ) =
+    ( { model | page = Form form }
+    , Cmd.map FormMsg cmds
+    )
+
+
+
+-- View
+
+
+view : Model -> Browser.Document Msg
+view model =
+    case model.page of
+        Top ->
+            { title = "top"
+            , body = [ text "top page" ]
+            }
+
+        Form form ->
+            { title = "top"
+            , body = [ text "top page" ]
+            }
+
+
+
+-- Subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none

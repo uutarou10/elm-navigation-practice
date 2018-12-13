@@ -1,4 +1,4 @@
-module Page.About exposing (Model, Msg, init, update, view)
+module Page.Form exposing (Model, Msg(..), init, update, view)
 
 import Browser
 import Html exposing (..)
